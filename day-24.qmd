@@ -42,4 +42,114 @@ print(uscities_sf)
 # Optional: plot a quick map
 plot(st_geometry(uscities_sf), main = "US Cities Locations")
 ```
+## Get Larimer County Boundary
+
+```{r get-larimer}
+# Load AOI package
+library(AOI)
+
+# Get Larimer County boundary
+larimer <- aoi_get(state = "CO", county = "Larimer")
+
+# Plot to confirm
+plot(st_geometry(larimer), main = "Larimer County Boundary")
+```
+
+## Filter Cities Within Larimer County
+```{r}
+# Use st_filter to find cities within the county boundary
+larimer_cities <- st_filter(uscities_sf, larimer)
+
+# View summary
+nrow(larimer_cities)
+head(larimer_cities)
+```
+
+## Plot Cities and County Boundary
+```{r}
+library(ggplot2)
+
+ggplot() +
+  geom_sf(data = larimer, fill = "transparent", color = "black", linewidth = 1) +
+  geom_sf(data = larimer_cities, aes(color = "Cities"), size = 2, alpha = 0.7) +
+  scale_color_manual(values = c("Cities" = "steelblue")) +
+  labs(title = "Cities within Larimer County, CO",
+       color = "Legend") +
+  theme_minimal()
+```
+
+## Highlight Top 3 Most Populous Cities
+```{r}
+# Find top 3 cities by population
+top_cities <- larimer_cities %>%
+  arrange(desc(population)) %>%
+  slice_head(n = 3)
+
+# Plot with top cities highlighted
+ggplot() +
+  geom_sf(data = larimer, fill = "transparent", color = "black", linewidth = 1) +
+  geom_sf(data = larimer_cities, aes(color = "All Cities"), size = 2, alpha = 0.6) +
+  geom_sf(data = top_cities, aes(color = "Top 3 Cities"), size = 4, shape = 21, fill = "red") +
+  scale_color_manual(values = c("All Cities" = "steelblue", "Top 3 Cities" = "red")) +
+  labs(title = "Top 3 Most Populous Cities in Larimer County",
+       color = "City Type") +
+  theme_minimal()
+```
+
+## Label the Top 3 Cities Using ggrepel
+```{r}
+library(ggrepel)
+
+ggplot() +
+  geom_sf(data = larimer, fill = "transparent", color = "black", linewidth = 1) +
+  geom_sf(data = larimer_cities, aes(color = "All Cities"), size = 2, alpha = 0.6) +
+  geom_sf(data = top_cities, aes(color = "Top 3 Cities"), size = 4, shape = 21, fill = "red") +
+  ggrepel::geom_label_repel(
+    data = top_cities,
+    aes(label = city, geometry = geometry),
+    stat = "sf_coordinates",
+    size = 3,
+    min.segment.length = 0
+  ) +
+  scale_color_manual(values = c("All Cities" = "steelblue", "Top 3 Cities" = "red")) +
+  labs(title = "Top 3 Most Populous Cities in Larimer County with Labels",
+       color = "City Type") +
+  theme_minimal()
+```
+
+## Save Final Map as PNG
+```{r save-map, eval=TRUE}
+# Create the plot and save it as an object
+final_map <- ggplot() +
+  geom_sf(data = larimer, fill = "transparent", color = "black", linewidth = 1) +
+  geom_sf(data = larimer_cities, aes(color = "All Cities"), size = 2, alpha = 0.6) +
+  geom_sf(data = top_cities, aes(color = "Top 3 Cities"), size = 4, shape = 21, fill = "red") +
+  ggrepel::geom_label_repel(
+    data = top_cities,
+    aes(label = city, geometry = geometry),
+    stat = "sf_coordinates",
+    size = 3,
+    min.segment.length = 0
+  ) +
+  scale_color_manual(values = c("All Cities" = "steelblue", "Top 3 Cities" = "red")) +
+  labs(title = "Top 3 Most Populous Cities in Larimer County with Labels",
+       color = "City Type") +
+  theme_minimal()
+
+# Save the plot
+ggsave(
+  filename = here::here("images", "larimer_cities_map.png"),
+  plot = final_map,
+  width = 8,
+  height = 6,
+  dpi = 300
+)
+```
+
+
+
+
+
+
+
 
