@@ -1,0 +1,45 @@
+---
+title: "day-24"
+format: html
+---
+
+```{r setup, include=FALSE}
+# Load required libraries
+library(tidyverse)
+library(sf)
+library(here)
+```
+
+## Read in the Data 
+```{r}
+# Use here() to safely navigate to the data directory
+uscities <- read_csv(here("data", "uscities.csv"))
+
+# View the first few rows
+head(uscities)
+
+# Glimpse the structure
+glimpse(uscities)
+```
+
+## Exploring the Data
+```{r}
+# Summary of key variables
+summary(select(uscities, city, state_name, lat, lng, population))
+
+# Check for missing coordinates
+sum(is.na(uscities$lat) | is.na(uscities$lng))
+```
+
+## Convert 
+```{r}
+# Convert to spatial object using sf
+uscities_sf <- st_as_sf(uscities, coords = c("lng", "lat"), crs = 4326)
+
+# Print a summary
+print(uscities_sf)
+
+# Optional: plot a quick map
+plot(st_geometry(uscities_sf), main = "US Cities Locations")
+```
+
